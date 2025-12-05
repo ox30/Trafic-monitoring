@@ -1,0 +1,126 @@
+/* ─────────────────────────────────────────────────────────────────────────────
+   SegmentList
+   ───────────────────────────────────────────────────────────────────────────── */
+
+.segment-list {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
+.segment-list-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-md);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.segment-list-header h2 {
+  font-size: 0.875rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-text-muted);
+}
+
+.segment-count {
+  font-size: 0.75rem;
+  color: var(--color-text-dim);
+}
+
+.segment-table-container {
+  flex: 1;
+  overflow-y: auto;
+}
+
+.segment-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.8125rem;
+}
+
+.segment-table th {
+  text-align: left;
+  padding: var(--space-sm) var(--space-md);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-text-dim);
+  background: var(--color-bg-elevated);
+  border-bottom: 1px solid var(--color-border);
+  position: sticky;
+  top: 0;
+}
+
+.segment-table td {
+  padding: var(--space-sm) var(--space-md);
+  border-bottom: 1px solid var(--color-border);
+  color: var(--color-text);
+}
+
+.segment-table tbody tr {
+  transition: background var(--transition-fast);
+}
+
+.segment-table tbody tr:hover {
+  background: var(--color-bg-hover);
+}
+
+.segment-row-highlighted {
+  background: rgba(26, 95, 42, 0.15) !important;
+}
+
+.segment-row-highlighted td {
+  border-bottom-color: var(--color-primary);
+}
+
+.axis-badge {
+  font-weight: 600;
+  font-size: 0.75rem;
+  color: var(--color-primary-light);
+  padding: 2px 8px;
+  background: rgba(26, 95, 42, 0.2);
+  border-radius: var(--radius-sm);
+}
+
+.segment-node {
+  color: var(--color-text-muted);
+  max-width: 150px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+
+.segment-direction {
+  text-align: center;
+}
+
+.direction-badge {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  font-weight: 700;
+  font-size: 0.875rem;
+  border-radius: var(--radius-sm);
+}
+
+.direction-plus {
+  background: rgba(34, 197, 94, 0.2);
+  color: var(--color-success);
+}
+
+.direction-minus {
+  background: rgba(239, 68, 68, 0.2);
+  color: var(--color-accent);
+}
+
+.segment-length {
+  text-align: right;
+  font-family: var(--font-mono);
+  color: var(--color-text-dim);
+}
+

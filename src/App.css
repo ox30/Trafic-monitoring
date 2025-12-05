@@ -1,0 +1,121 @@
+/* ─────────────────────────────────────────────────────────────────────────────
+   App – Layout principal
+   ───────────────────────────────────────────────────────────────────────────── */
+
+.app {
+  min-height: 100vh;
+  display: flex;
+  flex-direction: column;
+  background: 
+    radial-gradient(ellipse at 0% 0%, rgba(26, 95, 42, 0.15) 0%, transparent 50%),
+    radial-gradient(ellipse at 100% 100%, rgba(26, 95, 42, 0.1) 0%, transparent 50%),
+    var(--color-bg);
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   Header
+   ───────────────────────────────────────────────────────────────────────────── */
+
+.app-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-md) var(--space-xl);
+  background: var(--color-bg-elevated);
+  border-bottom: 1px solid var(--color-border);
+  backdrop-filter: blur(8px);
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+
+.app-header-brand {
+  display: flex;
+  align-items: center;
+  gap: var(--space-md);
+}
+
+.app-logo {
+  width: 40px;
+  height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, var(--color-primary), var(--color-primary-dark));
+  border-radius: var(--radius-md);
+  color: white;
+  box-shadow: var(--shadow-md);
+}
+
+.app-logo svg {
+  width: 24px;
+  height: 24px;
+}
+
+.app-title h1 {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--color-text);
+  letter-spacing: -0.02em;
+}
+
+.app-subtitle {
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+}
+
+.app-header-status {
+  display: flex;
+  align-items: center;
+  gap: var(--space-lg);
+}
+
+.status-indicator {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  font-size: 0.875rem;
+  color: var(--color-text-muted);
+}
+
+.status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  background: var(--color-text-dim);
+}
+
+.status-online .status-dot {
+  background: var(--color-success);
+  box-shadow: 0 0 8px var(--color-success);
+  animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+.status-time {
+  font-family: var(--font-mono);
+  font-size: 1.125rem;
+  font-weight: 500;
+  color: var(--color-text);
+  padding: var(--space-xs) var(--space-sm);
+  background: var(--color-bg-card);
+  border-radius: var(--radius-sm);
+  border: 1px solid var(--color-border);
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   Main content
+   ───────────────────────────────────────────────────────────────────────────── */
+
+.app-main {
+  flex: 1;
+  padding: var(--space-lg);
+  overflow: auto;
+}
+

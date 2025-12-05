@@ -1,0 +1,102 @@
+/* ─────────────────────────────────────────────────────────────────────────────
+   TrafficMapPlaceholder
+   ───────────────────────────────────────────────────────────────────────────── */
+
+.map-placeholder {
+  position: relative;
+  height: 100%;
+  min-height: 300px;
+  background: var(--color-bg-card);
+  border-radius: var(--radius-lg);
+  border: 1px solid var(--color-border);
+  overflow: hidden;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.map-placeholder-content {
+  position: relative;
+  z-index: 2;
+  text-align: center;
+  padding: var(--space-xl);
+}
+
+.map-placeholder-icon {
+  width: 64px;
+  height: 64px;
+  margin: 0 auto var(--space-lg);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, var(--color-primary), var(--color-primary-dark));
+  border-radius: var(--radius-xl);
+  box-shadow: var(--shadow-lg);
+}
+
+.map-placeholder-icon svg {
+  width: 36px;
+  height: 36px;
+  color: white;
+}
+
+.map-placeholder-title {
+  font-size: 1.25rem;
+  font-weight: 600;
+  color: var(--color-text);
+  margin-bottom: var(--space-xs);
+}
+
+.map-placeholder-subtitle {
+  font-size: 0.875rem;
+  color: var(--color-text-muted);
+  margin-bottom: var(--space-md);
+}
+
+.map-placeholder-badge {
+  display: inline-block;
+  padding: var(--space-xs) var(--space-md);
+  background: var(--color-bg-hover);
+  border: 1px solid var(--color-border-light);
+  border-radius: var(--radius-md);
+  font-size: 0.75rem;
+  font-weight: 500;
+  color: var(--color-text-muted);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  margin-bottom: var(--space-lg);
+}
+
+.map-placeholder-features {
+  display: flex;
+  gap: var(--space-lg);
+  justify-content: center;
+  flex-wrap: wrap;
+}
+
+.map-feature {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  font-size: 0.8125rem;
+  color: var(--color-text-dim);
+}
+
+.map-feature-icon {
+  font-size: 1rem;
+}
+
+/* Background décoratif */
+.map-placeholder-bg {
+  position: absolute;
+  inset: 0;
+  z-index: 1;
+  opacity: 0.5;
+}
+
+.map-bg-svg {
+  width: 100%;
+  height: 100%;
+  color: var(--color-text-dim);
+}
+
