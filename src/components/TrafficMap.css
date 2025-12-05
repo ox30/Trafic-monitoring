@@ -209,3 +209,86 @@
   background: #f59e0b;
 }
 
+/* ─────────────────────────────────────────────────────────────────────────────
+   Loading indicator
+   ───────────────────────────────────────────────────────────────────────────── */
+
+.traffic-map-loading {
+  position: absolute;
+  top: 50%;
+  left: 50%;
+  transform: translate(-50%, -50%);
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: var(--space-md);
+  padding: var(--space-lg) var(--space-xl);
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  z-index: 20;
+}
+
+.loading-spinner {
+  width: 32px;
+  height: 32px;
+  border: 3px solid var(--color-border);
+  border-top-color: var(--color-primary-light);
+  border-radius: 50%;
+  animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+  to { transform: rotate(360deg); }
+}
+
+.traffic-map-loading span {
+  font-size: 0.875rem;
+  color: var(--color-text-muted);
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   Data source badge
+   ───────────────────────────────────────────────────────────────────────────── */
+
+.traffic-map-source {
+  position: absolute;
+  top: var(--space-md);
+  left: var(--space-md);
+  padding: var(--space-xs) var(--space-sm);
+  font-size: 0.6875rem;
+  font-weight: 500;
+  border-radius: var(--radius-sm);
+  z-index: 10;
+}
+
+.traffic-map-source.api {
+  background: rgba(34, 197, 94, 0.2);
+  color: var(--color-success);
+  border: 1px solid rgba(34, 197, 94, 0.3);
+}
+
+.traffic-map-source.mock {
+  background: rgba(234, 179, 8, 0.2);
+  color: var(--color-warning);
+  border: 1px solid rgba(234, 179, 8, 0.3);
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   Popup enhancements
+   ───────────────────────────────────────────────────────────────────────────── */
+
+.popup-name {
+  font-size: 0.8125rem;
+  color: var(--color-text-muted);
+  display: block;
+}
+
+.popup-km {
+  font-size: 0.75rem;
+  font-family: var(--font-mono);
+  color: var(--color-text-dim);
+  display: block;
+}
+

@@ -37,12 +37,16 @@ export function DashboardPage() {
   // Gestion de la sélection d'un segment
   const handleSelectSegment = (segmentId: string | null) => {
     setSelectedSegmentId(segmentId)
-    // Si un événement est associé à ce segment, le sélectionner
+    
     if (segmentId) {
+      // Si un événement est associé à ce segment, le sélectionner
       const relatedEvent = mockTrafficEvents.find(e => e.globalSegmentId === segmentId)
       if (relatedEvent) {
         setSelectedEventId(relatedEvent.id)
       }
+    } else {
+      // Désélection du segment → désélectionner aussi l'événement
+      setSelectedEventId(null)
     }
   }
 

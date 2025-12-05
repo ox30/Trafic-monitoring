@@ -1,7 +1,19 @@
+import { useState, useEffect } from 'react'
 import { DashboardPage } from './pages/DashboardPage'
+import { SystemStatusPanel } from './components/SystemStatusPanel'
 import './App.css'
 
 function App() {
+  // Horloge temps réel
+  const [currentTime, setCurrentTime] = useState(new Date())
+
+  useEffect(() => {
+    const timer = setInterval(() => {
+      setCurrentTime(new Date())
+    }, 1000)
+    return () => clearInterval(timer)
+  }, [])
+
   return (
     <div className="app">
       <header className="app-header">
@@ -19,14 +31,12 @@ function App() {
           </div>
         </div>
         <div className="app-header-status">
-          <div className="status-indicator status-online">
-            <span className="status-dot"></span>
-            <span>Système actif</span>
-          </div>
+          <SystemStatusPanel />
           <div className="status-time">
-            {new Date().toLocaleTimeString('fr-CH', { 
+            {currentTime.toLocaleTimeString('fr-CH', { 
               hour: '2-digit', 
-              minute: '2-digit' 
+              minute: '2-digit',
+              second: '2-digit'
             })}
           </div>
         </div>
@@ -39,4 +49,3 @@ function App() {
 }
 
 export default App
-
