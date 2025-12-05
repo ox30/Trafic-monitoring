@@ -1,0 +1,211 @@
+/* ─────────────────────────────────────────────────────────────────────────────
+   TrafficMap – Carte MapLibre
+   ───────────────────────────────────────────────────────────────────────────── */
+
+.traffic-map {
+  position: relative;
+  width: 100%;
+  height: 100%;
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+}
+
+.traffic-map-container {
+  width: 100%;
+  height: 100%;
+}
+
+/* Surcharge des styles MapLibre */
+.traffic-map .maplibregl-canvas {
+  outline: none;
+}
+
+.traffic-map .maplibregl-ctrl-group {
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  box-shadow: var(--shadow-md);
+}
+
+.traffic-map .maplibregl-ctrl-group button {
+  background-color: var(--color-bg-card);
+  border-color: var(--color-border);
+}
+
+.traffic-map .maplibregl-ctrl-group button:hover {
+  background-color: var(--color-bg-hover);
+}
+
+.traffic-map .maplibregl-ctrl-group button + button {
+  border-top: 1px solid var(--color-border);
+}
+
+.traffic-map .maplibregl-ctrl-scale {
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  color: var(--color-text);
+  font-family: var(--font-mono);
+  font-size: 10px;
+  padding: 2px 6px;
+  border-radius: var(--radius-sm);
+}
+
+.traffic-map .maplibregl-ctrl-attrib {
+  background: rgba(10, 15, 13, 0.8);
+  font-size: 10px;
+}
+
+.traffic-map .maplibregl-ctrl-attrib a {
+  color: var(--color-text-muted);
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   Popups
+   ───────────────────────────────────────────────────────────────────────────── */
+
+.traffic-map .maplibregl-popup-content {
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-lg);
+  padding: 0;
+  min-width: 120px;
+}
+
+.traffic-map .maplibregl-popup-tip {
+  border-top-color: var(--color-bg-card);
+}
+
+.map-popup {
+  padding: var(--space-sm) var(--space-md);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+}
+
+.map-popup strong {
+  font-size: 0.875rem;
+  color: var(--color-text);
+}
+
+.popup-badge {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  color: var(--color-primary-light);
+  background: rgba(26, 95, 42, 0.2);
+  padding: 2px 6px;
+  border-radius: var(--radius-sm);
+  width: fit-content;
+}
+
+.popup-type {
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+}
+
+.map-popup-event {
+  border-left: 3px solid var(--color-accent);
+}
+
+.popup-severity {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  padding: 2px 6px;
+  border-radius: var(--radius-sm);
+  width: fit-content;
+}
+
+.popup-severity-critical {
+  background: rgba(239, 68, 68, 0.2);
+  color: var(--severity-critical);
+}
+
+.popup-severity-high {
+  background: rgba(249, 115, 22, 0.2);
+  color: var(--severity-high);
+}
+
+.popup-severity-medium {
+  background: rgba(234, 179, 8, 0.2);
+  color: var(--severity-medium);
+}
+
+.popup-severity-low {
+  background: rgba(34, 197, 94, 0.2);
+  color: var(--severity-low);
+}
+
+.popup-delay {
+  font-size: 0.75rem;
+  font-weight: 600;
+  color: var(--color-warning);
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   Légende
+   ───────────────────────────────────────────────────────────────────────────── */
+
+.traffic-map-legend {
+  position: absolute;
+  bottom: var(--space-lg);
+  right: var(--space-lg);
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: var(--space-sm) var(--space-md);
+  box-shadow: var(--shadow-md);
+  z-index: 10;
+}
+
+.legend-title {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--color-text-muted);
+  margin-bottom: var(--space-sm);
+}
+
+.legend-items {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-xs);
+}
+
+.legend-item {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  font-size: 0.75rem;
+  color: var(--color-text);
+}
+
+.legend-line {
+  width: 24px;
+  height: 4px;
+  border-radius: 2px;
+}
+
+.legend-line-normal {
+  background: #1a5f2a;
+}
+
+.legend-line-selected {
+  background: #22c55e;
+  height: 6px;
+}
+
+.legend-point {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  border: 2px solid #1a5f2a;
+}
+
+.legend-point-junction {
+  background: #ffffff;
+}
+
+.legend-point-interchange {
+  background: #f59e0b;
+}
+
