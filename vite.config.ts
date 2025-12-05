@@ -10,5 +10,6 @@ export default defineConfig({
       '@': resolve(__dirname, './src'),
     },
   },
+  assetsInclude: ['**/*.geojson'],
 })
 

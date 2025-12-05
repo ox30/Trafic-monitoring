@@ -60,20 +60,26 @@
   color: var(--color-text);
 }
 
-.segment-table tbody tr {
+.segment-row {
+  cursor: pointer;
   transition: background var(--transition-fast);
 }
 
-.segment-table tbody tr:hover {
+.segment-row:hover {
   background: var(--color-bg-hover);
 }
 
-.segment-row-highlighted {
-  background: rgba(26, 95, 42, 0.15) !important;
+.segment-row-selected {
+  background: rgba(34, 197, 94, 0.15) !important;
 }
 
-.segment-row-highlighted td {
-  border-bottom-color: var(--color-primary);
+.segment-row-selected td {
+  border-bottom-color: var(--color-success);
+}
+
+.segment-row-selected .axis-badge {
+  background: rgba(34, 197, 94, 0.3);
+  color: var(--color-success);
 }
 
 .axis-badge {

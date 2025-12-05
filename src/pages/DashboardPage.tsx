@@ -3,7 +3,7 @@
  */
 
 import { useState } from 'react'
-import { TrafficMapPlaceholder } from '../components/TrafficMapPlaceholder'
+import { TrafficMap } from '../components/TrafficMap'
 import { EventList } from '../components/EventList'
 import { EventDetail } from '../components/EventDetail'
 import { SegmentList } from '../components/SegmentList'
@@ -14,6 +14,7 @@ import './DashboardPage.css'
 
 export function DashboardPage() {
   const [selectedEventId, setSelectedEventId] = useState<string | null>(null)
+  const [selectedSegmentId, setSelectedSegmentId] = useState<string | null>(null)
 
   // Événements triés par sévérité
   const sortedEvents = sortEventsBySeverity(mockTrafficEvents)
@@ -23,14 +24,38 @@ export function DashboardPage() {
     ? mockTrafficEvents.find(e => e.id === selectedEventId) || null
     : null
 
-  // ID du segment associé à l'événement sélectionné (pour le surlignage)
-  const highlightedSegmentId = selectedEvent?.globalSegmentId || null
+  // Gestion de la sélection d'un événement
+  const handleSelectEvent = (eventId: string) => {
+    setSelectedEventId(eventId)
+    // Sélectionner automatiquement le segment associé
+    const event = mockTrafficEvents.find(e => e.id === eventId)
+    if (event) {
+      setSelectedSegmentId(event.globalSegmentId)
+    }
+  }
+
+  // Gestion de la sélection d'un segment
+  const handleSelectSegment = (segmentId: string | null) => {
+    setSelectedSegmentId(segmentId)
+    // Si un événement est associé à ce segment, le sélectionner
+    if (segmentId) {
+      const relatedEvent = mockTrafficEvents.find(e => e.globalSegmentId === segmentId)
+      if (relatedEvent) {
+        setSelectedEventId(relatedEvent.id)
+      }
+    }
+  }
 
   return (
     <div className="dashboard">
-      {/* Zone carte (placeholder) */}
+      {/* Zone carte MapLibre */}
       <div className="dashboard-map">
-        <TrafficMapPlaceholder />
+        <TrafficMap 
+          selectedSegmentId={selectedSegmentId}
+          onSelectSegment={handleSelectSegment}
+          events={sortedEvents}
+          segments={mockGlobalSegments}
+        />
       </div>
 
       {/* Zone principale : événements et détails */}
@@ -40,7 +65,7 @@ export function DashboardPage() {
           <EventList 
             events={sortedEvents}
             selectedEventId={selectedEventId}
-            onSelectEvent={setSelectedEventId}
+            onSelectEvent={handleSelectEvent}
           />
         </div>
 
@@ -54,10 +79,10 @@ export function DashboardPage() {
       <div className="dashboard-segments">
         <SegmentList 
           segments={mockGlobalSegments}
-          highlightedSegmentId={highlightedSegmentId}
+          selectedSegmentId={selectedSegmentId}
+          onSelectSegment={handleSelectSegment}
         />
       </div>
     </div>
   )
 }
-

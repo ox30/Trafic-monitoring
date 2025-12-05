@@ -1,0 +1,197 @@
+{
+  "type": "FeatureCollection",
+  "features": [
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "A1-GE-NYON-PLUS",
+        "axe": "A1",
+        "from": "Genève Aéroport",
+        "to": "Nyon",
+        "direction": "PLUS",
+        "lengthKm": 22.5
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [6.1092, 46.2380],
+          [6.1250, 46.2520],
+          [6.1450, 46.2750],
+          [6.1680, 46.3050],
+          [6.1950, 46.3350],
+          [6.2150, 46.3580],
+          [6.2333, 46.3833]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "A1-NYON-MORGES-PLUS",
+        "axe": "A1",
+        "from": "Nyon",
+        "to": "Morges",
+        "direction": "PLUS",
+        "lengthKm": 28.0
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [6.2333, 46.3833],
+          [6.2650, 46.4050],
+          [6.3050, 46.4280],
+          [6.3450, 46.4480],
+          [6.3850, 46.4650],
+          [6.4250, 46.4800],
+          [6.4650, 46.4950],
+          [6.5000, 46.5167]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "A1-MORGES-CRISSIER-PLUS",
+        "axe": "A1",
+        "from": "Morges",
+        "to": "Crissier",
+        "direction": "PLUS",
+        "lengthKm": 12.5
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [6.5000, 46.5167],
+          [6.5180, 46.5250],
+          [6.5380, 46.5350],
+          [6.5550, 46.5420],
+          [6.5750, 46.5450]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "A1-MORGES-NYON-MINUS",
+        "axe": "A1",
+        "from": "Morges",
+        "to": "Nyon",
+        "direction": "MINUS",
+        "lengthKm": 28.0
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [6.5020, 46.5147],
+          [6.4670, 46.4930],
+          [6.4270, 46.4780],
+          [6.3870, 46.4630],
+          [6.3470, 46.4460],
+          [6.3070, 46.4260],
+          [6.2670, 46.4030],
+          [6.2353, 46.3813]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "A9-VEVEY-MONTREUX-PLUS",
+        "axe": "A9",
+        "from": "Vevey",
+        "to": "Montreux",
+        "direction": "PLUS",
+        "lengthKm": 8.5
+      },
+      "geometry": {
+        "type": "LineString",
+        "coordinates": [
+          [6.8428, 46.4628],
+          [6.8600, 46.4550],
+          [6.8780, 46.4480],
+          [6.8950, 46.4400],
+          [6.9106, 46.4312]
+        ]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "J-GE-AIRPORT",
+        "type": "junction",
+        "name": "Genève Aéroport",
+        "axe": "A1"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [6.1092, 46.2380]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "J-NYON",
+        "type": "junction",
+        "name": "Nyon",
+        "axe": "A1"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [6.2333, 46.3833]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "J-MORGES",
+        "type": "interchange",
+        "name": "Échangeur Morges",
+        "axe": "A1"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [6.5000, 46.5167]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "J-LAUSANNE-CRISSIER",
+        "type": "interchange",
+        "name": "Échangeur Crissier",
+        "axe": "A1"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [6.5750, 46.5450]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "J-VEVEY",
+        "type": "junction",
+        "name": "Vevey",
+        "axe": "A9"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [6.8428, 46.4628]
+      }
+    },
+    {
+      "type": "Feature",
+      "properties": {
+        "id": "J-MONTREUX",
+        "type": "junction",
+        "name": "Montreux",
+        "axe": "A9"
+      },
+      "geometry": {
+        "type": "Point",
+        "coordinates": [6.9106, 46.4312]
+      }
+    }
+  ]
+}
+

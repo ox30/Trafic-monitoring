@@ -11,10 +11,11 @@ import './SegmentList.css'
 
 interface SegmentListProps {
   segments: GlobalSegment[]
-  highlightedSegmentId: string | null
+  selectedSegmentId: string | null
+  onSelectSegment: (segmentId: string | null) => void
 }
 
-export function SegmentList({ segments, highlightedSegmentId }: SegmentListProps) {
+export function SegmentList({ segments, selectedSegmentId, onSelectSegment }: SegmentListProps) {
   return (
     <div className="segment-list">
       <div className="segment-list-header">
@@ -37,7 +38,8 @@ export function SegmentList({ segments, highlightedSegmentId }: SegmentListProps
               <SegmentRow 
                 key={segment.id}
                 segment={segment}
-                isHighlighted={segment.id === highlightedSegmentId}
+                isSelected={segment.id === selectedSegmentId}
+                onSelect={() => onSelectSegment(segment.id === selectedSegmentId ? null : segment.id)}
               />
             ))}
           </tbody>
@@ -49,15 +51,19 @@ export function SegmentList({ segments, highlightedSegmentId }: SegmentListProps
 
 interface SegmentRowProps {
   segment: GlobalSegment
-  isHighlighted: boolean
+  isSelected: boolean
+  onSelect: () => void
 }
 
-function SegmentRow({ segment, isHighlighted }: SegmentRowProps) {
+function SegmentRow({ segment, isSelected, onSelect }: SegmentRowProps) {
   const fromNode = mockNetworkNodes.find(n => n.id === segment.fromNodeId)
   const toNode = mockNetworkNodes.find(n => n.id === segment.toNodeId)
 
   return (
-    <tr className={isHighlighted ? 'segment-row-highlighted' : ''}>
+    <tr 
+      className={`segment-row ${isSelected ? 'segment-row-selected' : ''}`}
+      onClick={onSelect}
+    >
       <td>
         <span className="axis-badge">{segment.axisCode}</span>
       </td>
@@ -78,4 +84,3 @@ function SegmentRow({ segment, isHighlighted }: SegmentRowProps) {
     </tr>
   )
 }
-
