@@ -2,7 +2,7 @@
  * Page principale du Dashboard de monitoring trafic
  */
 
-import { useState } from 'react'
+import { useState, useCallback } from 'react'
 import { TrafficMap } from '../components/TrafficMap'
 import { EventList } from '../components/EventList'
 import { EventDetail } from '../components/EventDetail'
@@ -25,17 +25,17 @@ export function DashboardPage() {
     : null
 
   // Gestion de la sélection d'un événement
-  const handleSelectEvent = (eventId: string) => {
+  const handleSelectEvent = useCallback((eventId: string) => {
     setSelectedEventId(eventId)
     // Sélectionner automatiquement le segment associé
     const event = mockTrafficEvents.find(e => e.id === eventId)
     if (event) {
       setSelectedSegmentId(event.globalSegmentId)
     }
-  }
+  }, [])
 
   // Gestion de la sélection d'un segment
-  const handleSelectSegment = (segmentId: string | null) => {
+  const handleSelectSegment = useCallback((segmentId: string | null) => {
     setSelectedSegmentId(segmentId)
     
     if (segmentId) {
@@ -51,7 +51,7 @@ export function DashboardPage() {
       // Désélection du segment → désélectionner aussi l'événement
       setSelectedEventId(null)
     }
-  }
+  }, [])
 
   return (
     <div className="dashboard">

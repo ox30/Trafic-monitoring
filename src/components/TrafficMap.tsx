@@ -70,9 +70,10 @@ export function TrafficMap({
   // Stocker les données réseau chargées
   const networkDataRef = useRef<GeoJSON.FeatureCollection | null>(null)
   
-  // Refs pour les valeurs actuelles
+  // Refs pour les valeurs actuelles (évite les re-renders de la carte)
   const selectedSegmentRef = useRef(selectedSegmentId)
   const eventsRef = useRef(events)
+  const onSelectSegmentRef = useRef(onSelectSegment)
   
   useEffect(() => {
     selectedSegmentRef.current = selectedSegmentId
@@ -81,6 +82,10 @@ export function TrafficMap({
   useEffect(() => {
     eventsRef.current = events
   }, [events])
+  
+  useEffect(() => {
+    onSelectSegmentRef.current = onSelectSegment
+  }, [onSelectSegment])
 
   // Fonction pour mettre à jour le surlignage
   const updateHighlight = useCallback((segmentId: string | null) => {
@@ -407,7 +412,7 @@ export function TrafficMap({
           const feature = e.features[0]
           const segmentId = feature.properties?.id || feature.properties?.featureId || feature.properties?.segmentname
           if (segmentId) {
-            onSelectSegment(String(segmentId))
+            onSelectSegmentRef.current(String(segmentId))
           }
         }
       })
@@ -508,7 +513,8 @@ export function TrafficMap({
       map.current?.remove()
       map.current = null
     }
-  }, [onSelectSegment, updateHighlight, updateEvents])
+  // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, []) // Intentionnellement vide - la carte ne doit s'initialiser qu'une fois
 
   // Mettre à jour le surlignage quand la sélection change
   useEffect(() => {
