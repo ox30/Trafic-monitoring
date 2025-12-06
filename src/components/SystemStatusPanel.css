@@ -1,0 +1,299 @@
+/* ─────────────────────────────────────────────────────────────────────────────
+   SystemStatusPanel – Panneau de contrôle des systèmes
+   ───────────────────────────────────────────────────────────────────────────── */
+
+.system-status {
+  position: relative;
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   Trigger button
+   ───────────────────────────────────────────────────────────────────────────── */
+
+.system-status-trigger {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  padding: var(--space-xs) var(--space-md);
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  color: var(--color-text-muted);
+  font-family: inherit;
+  font-size: 0.875rem;
+  cursor: pointer;
+  transition: all var(--transition-fast);
+}
+
+.system-status-trigger:hover {
+  background: var(--color-bg-hover);
+  border-color: var(--color-border-light);
+}
+
+.system-status-trigger.status-online {
+  border-color: rgba(34, 197, 94, 0.3);
+}
+
+.system-status-trigger.status-offline {
+  border-color: rgba(239, 68, 68, 0.3);
+}
+
+.system-status-trigger.status-degraded {
+  border-color: rgba(245, 158, 11, 0.3);
+}
+
+.system-status-trigger.status-loading {
+  border-color: rgba(59, 130, 246, 0.3);
+}
+
+.status-dot {
+  width: 8px;
+  height: 8px;
+  border-radius: 50%;
+  flex-shrink: 0;
+}
+
+.status-online .status-dot {
+  box-shadow: 0 0 8px currentColor;
+  animation: pulse-glow 2s ease-in-out infinite;
+}
+
+@keyframes pulse-glow {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.6; }
+}
+
+.status-loading .status-dot {
+  animation: spin 1s linear infinite;
+}
+
+.status-label {
+  color: var(--color-text);
+  font-weight: 500;
+}
+
+.status-chevron {
+  width: 16px;
+  height: 16px;
+  transition: transform var(--transition-fast);
+}
+
+.status-chevron.open {
+  transform: rotate(180deg);
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   Panel
+   ───────────────────────────────────────────────────────────────────────────── */
+
+.system-status-panel {
+  position: absolute;
+  top: calc(100% + var(--space-sm));
+  right: 0;
+  width: 360px;
+  max-height: 480px;
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  box-shadow: var(--shadow-lg);
+  overflow: hidden;
+  z-index: 1000;
+  animation: slideDown 0.2s ease-out;
+}
+
+@keyframes slideDown {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: var(--space-md) var(--space-lg);
+  border-bottom: 1px solid var(--color-border);
+  background: var(--color-bg-elevated);
+}
+
+.panel-header h3 {
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--color-text);
+  margin: 0;
+}
+
+.panel-summary {
+  font-size: 0.75rem;
+  font-weight: 500;
+  padding: var(--space-xs) var(--space-sm);
+  background: var(--color-bg-hover);
+  border-radius: var(--radius-sm);
+  color: var(--color-text-muted);
+}
+
+.panel-systems {
+  max-height: 360px;
+  overflow-y: auto;
+  padding: var(--space-sm);
+}
+
+.panel-footer {
+  padding: var(--space-sm) var(--space-lg);
+  border-top: 1px solid var(--color-border);
+  background: var(--color-bg-elevated);
+}
+
+.panel-timestamp {
+  font-size: 0.6875rem;
+  color: var(--color-text-dim);
+}
+
+/* ─────────────────────────────────────────────────────────────────────────────
+   System Item
+   ───────────────────────────────────────────────────────────────────────────── */
+
+.system-item {
+  padding: var(--space-md);
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  margin-bottom: var(--space-sm);
+  transition: all var(--transition-fast);
+}
+
+.system-item:last-child {
+  margin-bottom: 0;
+}
+
+.system-item:hover {
+  border-color: var(--color-border-light);
+}
+
+.system-item.state-online {
+  border-left: 3px solid #22c55e;
+}
+
+.system-item.state-offline {
+  border-left: 3px solid #ef4444;
+  opacity: 0.7;
+}
+
+.system-item.state-degraded {
+  border-left: 3px solid #f59e0b;
+}
+
+.system-item.state-loading {
+  border-left: 3px solid #3b82f6;
+}
+
+.system-item.state-unknown {
+  border-left: 3px solid #6b7280;
+}
+
+.system-item-header {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-sm);
+}
+
+.system-state-icon {
+  width: 24px;
+  height: 24px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: var(--radius-sm);
+  font-size: 0.75rem;
+  font-weight: 700;
+  flex-shrink: 0;
+}
+
+.system-info {
+  flex: 1;
+  min-width: 0;
+}
+
+.system-name {
+  display: block;
+  font-size: 0.875rem;
+  font-weight: 600;
+  color: var(--color-text);
+  margin-bottom: 2px;
+}
+
+.system-description {
+  display: block;
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+  line-height: 1.4;
+}
+
+.system-state-badge {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  padding: 2px 8px;
+  border-radius: var(--radius-sm);
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+
+/* Détails */
+.system-details {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-sm);
+  margin-top: var(--space-sm);
+  padding-top: var(--space-sm);
+  border-top: 1px solid var(--color-border);
+}
+
+.system-detail {
+  font-size: 0.6875rem;
+  display: flex;
+  gap: var(--space-xs);
+}
+
+.detail-key {
+  color: var(--color-text-dim);
+}
+
+.detail-value {
+  color: var(--color-text-muted);
+  font-weight: 500;
+}
+
+/* Erreur */
+.system-error {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-xs);
+  margin-top: var(--space-sm);
+  padding: var(--space-sm);
+  background: rgba(239, 68, 68, 0.1);
+  border-radius: var(--radius-sm);
+  font-size: 0.75rem;
+  color: #ef4444;
+}
+
+.error-icon {
+  flex-shrink: 0;
+}
+
+.error-message {
+  line-height: 1.4;
+}
+
+/* Timestamp */
+.system-timestamp {
+  margin-top: var(--space-sm);
+  font-size: 0.625rem;
+  color: var(--color-text-dim);
+  text-align: right;
+}
+
