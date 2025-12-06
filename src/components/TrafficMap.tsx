@@ -7,7 +7,6 @@ import { useEffect, useRef, useCallback, useState } from 'react'
 import maplibregl from 'maplibre-gl'
 import 'maplibre-gl/dist/maplibre-gl.css'
 import { TrafficEvent } from '../domain/events'
-import { GlobalSegment } from '../domain/network'
 import { loadNationalRoads, extractRouteNumber, ROAD_COLORS } from '../services/geoAdminApi'
 import { updateSystemStatus } from '../services/systemStatus'
 
@@ -50,7 +49,6 @@ interface TrafficMapProps {
   selectedSegmentId: string | null
   onSelectSegment: (segmentId: string | null) => void
   events: TrafficEvent[]
-  segments: GlobalSegment[]
 }
 
 // Centre de la Suisse
@@ -367,21 +365,22 @@ export function TrafficMap({
         },
       })
 
-      // Points (jonctions, bornes) - visible uniquement à zoom élevé
+      // Points kilométriques - visibles à partir du zoom 9
       mapInstance.addLayer({
         id: 'road-points',
         type: 'circle',
         source: 'national-roads',
         filter: ['==', ['geometry-type'], 'Point'],
-        minzoom: 10,
+        minzoom: 9,
         paint: {
           'circle-radius': [
             'interpolate', ['linear'], ['zoom'],
-            10, 3,
-            14, 6
+            9, 3,
+            12, 5,
+            16, 8
           ],
-          'circle-color': '#ffffff',
-          'circle-stroke-color': '#1a5f2a',
+          'circle-color': ROAD_COLORS.kmPoint,
+          'circle-stroke-color': ROAD_COLORS.kmPointStroke,
           'circle-stroke-width': 2,
         },
       })
@@ -434,8 +433,8 @@ export function TrafficMap({
         }
       }
 
-      // Handler pour le survol des routes
-      const handleRoadMouseEnter = (e: maplibregl.MapMouseEvent & { features?: maplibregl.MapGeoJSONFeature[] }) => {
+      // Handler pour le survol des axes principaux
+      const handleMainAxisMouseEnter = (e: maplibregl.MapMouseEvent & { features?: maplibregl.MapGeoJSONFeature[] }) => {
         if (!e.features || e.features.length === 0) return
         
         mapInstance.getCanvas().style.cursor = 'pointer'
@@ -443,20 +442,52 @@ export function TrafficMap({
         const feature = e.features[0]
         const props = feature.properties || {}
         
-        const routeNum = extractRouteNumber(props.strassennummer) || props.axe || 'N/A'
+        const routeNum = extractRouteNumber(props.strassennummer) || 'N/A'
         const axisCode = routeNum.replace('N', 'A')
-        const name = props.bezeichnung || props.segmentname || (props.from && props.to ? `${props.from} → ${props.to}` : '')
-        const km = props.kilometerwert ? `KM ${props.kilometerwert}` : ''
-        const isRamp = props.isRamp
+        const segmentName = props.segmentname || ''
+        const description = props.bezeichnung || ''
+        const posCode = props.positionscode || ''
+        const direction = posCode === '+' ? '→' : posCode === '-' ? '←' : ''
         
         popup
           .setLngLat(e.lngLat)
           .setHTML(`
-            <div class="map-popup ${isRamp ? 'map-popup-ramp' : ''}">
-              <strong>${axisCode}</strong>
-              ${isRamp ? '<span class="popup-type-ramp">Rampe</span>' : ''}
-              ${name ? `<span class="popup-name">${name}</span>` : ''}
-              ${km ? `<span class="popup-km">${km}</span>` : ''}
+            <div class="map-popup map-popup-axis">
+              <div class="popup-header">
+                <strong class="popup-route">${axisCode}</strong>
+                ${direction ? `<span class="popup-direction">${direction}</span>` : ''}
+              </div>
+              ${segmentName ? `<span class="popup-segment">${segmentName}</span>` : ''}
+              ${description ? `<span class="popup-description">${description}</span>` : ''}
+            </div>
+          `)
+          .addTo(mapInstance)
+      }
+
+      // Handler pour le survol des rampes
+      const handleRampMouseEnter = (e: maplibregl.MapMouseEvent & { features?: maplibregl.MapGeoJSONFeature[] }) => {
+        if (!e.features || e.features.length === 0) return
+        
+        mapInstance.getCanvas().style.cursor = 'pointer'
+        
+        const feature = e.features[0]
+        const props = feature.properties || {}
+        
+        const routeNum = extractRouteNumber(props.strassennummer) || 'N/A'
+        const axisCode = routeNum.replace('N', 'A')
+        const segmentName = props.segmentname || ''
+        const junction = props.bezeichnung || ''
+        
+        popup
+          .setLngLat(e.lngLat)
+          .setHTML(`
+            <div class="map-popup map-popup-ramp">
+              <div class="popup-header">
+                <strong class="popup-route">${axisCode}</strong>
+                <span class="popup-type-ramp">Rampe</span>
+              </div>
+              ${segmentName ? `<span class="popup-segment">${segmentName}</span>` : ''}
+              ${junction ? `<span class="popup-junction">Jonction: ${junction}</span>` : ''}
             </div>
           `)
           .addTo(mapInstance)
@@ -467,15 +498,8 @@ export function TrafficMap({
         popup.remove()
       }
 
-      // Appliquer les handlers aux deux couches (axes principaux et rampes)
-      mapInstance.on('click', 'roads-main', handleRoadClick)
-      mapInstance.on('click', 'roads-ramps', handleRoadClick)
-      mapInstance.on('mouseenter', 'roads-main', handleRoadMouseEnter)
-      mapInstance.on('mouseenter', 'roads-ramps', handleRoadMouseEnter)
-      mapInstance.on('mouseleave', 'roads-main', handleRoadMouseLeave)
-      mapInstance.on('mouseleave', 'roads-ramps', handleRoadMouseLeave)
-
-      mapInstance.on('mouseenter', 'road-points', (e: maplibregl.MapMouseEvent & { features?: maplibregl.MapGeoJSONFeature[] }) => {
+      // Handler pour le survol des points kilométriques
+      const handlePointMouseEnter = (e: maplibregl.MapMouseEvent & { features?: maplibregl.MapGeoJSONFeature[] }) => {
         if (!e.features || e.features.length === 0) return
         
         mapInstance.getCanvas().style.cursor = 'pointer'
@@ -484,24 +508,51 @@ export function TrafficMap({
         const coordinates = (feature.geometry as GeoJSON.Point).coordinates.slice() as [number, number]
         const props = feature.properties || {}
         
-        const name = props.name || props.bezeichnung || 'Point'
-        const km = props.kilometerwert ? `KM ${props.kilometerwert}` : ''
+        const pointName = props.name || ''
+        const km = props.kilometerwert || ''
+        const sectorLength = props.sektorlaenge ? `${parseFloat(props.sektorlaenge).toFixed(0)} m` : ''
+        const routeNum = extractRouteNumber(props.strassennummer) || ''
+        const axisCode = routeNum.replace('N', 'A')
         
         popup
           .setLngLat(coordinates)
           .setHTML(`
-            <div class="map-popup">
-              <strong>${name}</strong>
-              ${km ? `<span class="popup-km">${km}</span>` : ''}
+            <div class="map-popup map-popup-point">
+              <div class="popup-header">
+                <strong class="popup-route">${axisCode}</strong>
+                <span class="popup-type-point">Point KM</span>
+              </div>
+              ${pointName ? `<span class="popup-point-name">Repère: ${pointName}</span>` : ''}
+              ${km ? `<span class="popup-km">KM ${km}</span>` : ''}
+              ${sectorLength ? `<span class="popup-sector">Secteur: ${sectorLength}</span>` : ''}
             </div>
           `)
           .addTo(mapInstance)
-      })
+      }
 
-      mapInstance.on('mouseleave', 'road-points', () => {
-        mapInstance.getCanvas().style.cursor = ''
-        popup.remove()
-      })
+      // Handler pour clic sur les points
+      const handlePointClick = (e: maplibregl.MapMouseEvent & { features?: maplibregl.MapGeoJSONFeature[] }) => {
+        if (e.features && e.features.length > 0) {
+          const feature = e.features[0]
+          const segmentId = feature.properties?.id || feature.properties?.featureId
+          if (segmentId) {
+            onSelectSegmentRef.current(String(segmentId))
+          }
+        }
+      }
+
+      // Appliquer les handlers aux couches
+      mapInstance.on('click', 'roads-main', handleRoadClick)
+      mapInstance.on('click', 'roads-ramps', handleRoadClick)
+      mapInstance.on('click', 'road-points', handlePointClick)
+      
+      mapInstance.on('mouseenter', 'roads-main', handleMainAxisMouseEnter)
+      mapInstance.on('mouseenter', 'roads-ramps', handleRampMouseEnter)
+      mapInstance.on('mouseenter', 'road-points', handlePointMouseEnter)
+      
+      mapInstance.on('mouseleave', 'roads-main', handleRoadMouseLeave)
+      mapInstance.on('mouseleave', 'roads-ramps', handleRoadMouseLeave)
+      mapInstance.on('mouseleave', 'road-points', handleRoadMouseLeave)
 
       mapInstance.on('mouseenter', 'events-layer', (e: maplibregl.MapMouseEvent & { features?: maplibregl.MapGeoJSONFeature[] }) => {
         if (!e.features || e.features.length === 0) return
@@ -570,6 +621,10 @@ export function TrafficMap({
           <div className="legend-item">
             <span className="legend-line" style={{ background: ROAD_COLORS.ramp }}></span>
             <span>Rampes / Sorties</span>
+          </div>
+          <div className="legend-item">
+            <span className="legend-point" style={{ background: ROAD_COLORS.kmPoint, border: `2px solid ${ROAD_COLORS.kmPointStroke}` }}></span>
+            <span>Points KM</span>
           </div>
           <div className="legend-item">
             <span className="legend-line legend-line-selected"></span>

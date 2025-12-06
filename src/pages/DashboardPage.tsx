@@ -61,7 +61,6 @@ export function DashboardPage() {
           selectedSegmentId={selectedSegmentId}
           onSelectSegment={handleSelectSegment}
           events={sortedEvents}
-          segments={mockGlobalSegments}
         />
       </div>
 

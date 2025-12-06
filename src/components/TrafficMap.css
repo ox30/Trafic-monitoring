@@ -279,6 +279,38 @@
    Popup enhancements
    ───────────────────────────────────────────────────────────────────────────── */
 
+/* Popup - Structure */
+.popup-header {
+  display: flex;
+  align-items: center;
+  gap: var(--space-sm);
+  margin-bottom: var(--space-xs);
+}
+
+.popup-route {
+  font-size: 1rem;
+  color: var(--color-text);
+}
+
+.popup-direction {
+  font-size: 0.875rem;
+  color: var(--color-text-muted);
+}
+
+.popup-segment {
+  font-size: 0.875rem;
+  font-weight: 500;
+  color: var(--color-text);
+  display: block;
+}
+
+.popup-description {
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+  display: block;
+  margin-top: 2px;
+}
+
 .popup-name {
   font-size: 0.8125rem;
   color: var(--color-text-muted);
@@ -292,17 +324,56 @@
   display: block;
 }
 
+/* Popup - Axes principaux */
+.map-popup-axis {
+  border-left: 3px solid #dc2626;
+}
+
+/* Popup - Rampes */
 .map-popup-ramp {
-  border-left: 3px solid #8b5cf6;
+  border-left: 3px solid #a855f7;
 }
 
 .popup-type-ramp {
   font-size: 0.6875rem;
   font-weight: 600;
   padding: 2px 6px;
-  background: rgba(139, 92, 246, 0.2);
-  color: #8b5cf6;
+  background: rgba(168, 85, 247, 0.2);
+  color: #a855f7;
   border-radius: var(--radius-sm);
-  display: inline-block;
+}
+
+.popup-junction {
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+  display: block;
+  margin-top: 2px;
+}
+
+/* Popup - Points kilométriques */
+.map-popup-point {
+  border-left: 3px solid #f59e0b;
+}
+
+.popup-type-point {
+  font-size: 0.6875rem;
+  font-weight: 600;
+  padding: 2px 6px;
+  background: rgba(245, 158, 11, 0.2);
+  color: #f59e0b;
+  border-radius: var(--radius-sm);
+}
+
+.popup-point-name {
+  font-size: 0.8125rem;
+  color: var(--color-text);
+  display: block;
+}
+
+.popup-sector {
+  font-size: 0.75rem;
+  font-family: var(--font-mono);
+  color: var(--color-text-dim);
+  display: block;
 }
 
