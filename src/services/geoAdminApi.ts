@@ -20,12 +20,15 @@
  *   - kilometerwert = "141" (valeur en km)
  * 
  * STRATÉGIE DE CHARGEMENT :
- * L'API identify a une limite de ~500-1000 features par requête.
- * On charge donc route par route (N1, N2, etc.) pour tout récupérer.
+ * 1. Essayer de télécharger le fichier GeoJSON complet depuis data.geo.admin.ch
+ * 2. Si échec, fallback sur l'API identify route par route
  */
 
 const GEO_ADMIN_API_BASE = 'https://api3.geo.admin.ch/rest/services/api/MapServer'
 const LAYER_ID = 'ch.astra.nationalstrassenachsen'
+
+// URL de téléchargement direct du fichier GeoJSON complet
+const GEOJSON_DOWNLOAD_URL = 'https://data.geo.admin.ch/ch.astra.nationalstrassenachsen/ch.astra.nationalstrassenachsen/ch.astra.nationalstrassenachsen_4326.geojson'
 
 // Liste des routes nationales suisses
 const ROUTE_NUMBERS = [
@@ -211,24 +214,74 @@ async function loadByZone(bbox: { minLon: number; minLat: number; maxLon: number
 }
 
 /**
- * Charge toutes les routes avec fallback sur la méthode par zone
+ * Télécharge le fichier GeoJSON complet depuis data.geo.admin.ch
+ * C'est la méthode la plus fiable car elle contient TOUTES les données
+ */
+async function downloadFullGeoJSON(): Promise<GeoJSON.FeatureCollection> {
+  console.log('📥 Téléchargement du fichier GeoJSON complet...')
+  console.log(`   URL: ${GEOJSON_DOWNLOAD_URL}`)
+  
+  const response = await fetch(GEOJSON_DOWNLOAD_URL)
+  
+  if (!response.ok) {
+    throw new Error(`Erreur téléchargement: ${response.status} ${response.statusText}`)
+  }
+  
+  const data = await response.json() as GeoJSON.FeatureCollection
+  
+  // Enrichir les features avec isRamp
+  const enrichedFeatures = data.features.map(feature => ({
+    ...feature,
+    properties: {
+      ...feature.properties,
+      isRamp: isRampSegment((feature.properties || {}) as Record<string, unknown>),
+    }
+  }))
+  
+  return {
+    type: 'FeatureCollection',
+    features: enrichedFeatures,
+  }
+}
+
+/**
+ * Charge toutes les routes nationales
+ * 
+ * Stratégie en cascade :
+ * 1. Téléchargement direct du fichier GeoJSON complet (le plus fiable)
+ * 2. API find route par route
+ * 3. API identify par zones géographiques
  */
 export async function loadNationalRoadsWithFallback(): Promise<GeoJSON.FeatureCollection> {
+  // Méthode 1 : Téléchargement direct du fichier complet
   try {
-    // Essayer d'abord la méthode route par route
+    const result = await downloadFullGeoJSON()
+    console.log(`✅ Fichier complet téléchargé: ${result.features.length} features`)
+    return result
+  } catch (error) {
+    console.warn('⚠️ Échec téléchargement direct:', error)
+  }
+  
+  // Méthode 2 : API find route par route
+  try {
+    console.log('🔄 Fallback: API find route par route...')
     const result = await loadNationalRoads()
     
-    // Si on a assez de données, retourner
     if (result.features.length > 1000) {
       return result
     }
     
-    console.log('⚠️ Peu de données avec find, essai avec identify par zones...')
-    
-    // Fallback : charger par petites zones
+    console.log('⚠️ Peu de données avec find, essai par zones...')
+  } catch (error) {
+    console.warn('⚠️ Échec API find:', error)
+  }
+  
+  // Méthode 3 : API identify par zones
+  try {
+    console.log('🔄 Fallback: API identify par zones...')
     return await loadByMultipleZones()
   } catch (error) {
-    console.error('Erreur chargement routes:', error)
+    console.error('❌ Toutes les méthodes ont échoué:', error)
     throw error
   }
 }

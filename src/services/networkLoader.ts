@@ -63,11 +63,9 @@ export async function loadNetworkData(forceRefresh = false): Promise<LoadResult>
       console.log(`   ${stats.totalFeatures} features`)
       
       updateSystemStatus('network-layer', {
-        status: 'online',
-        message: `Cache local (${ageHours.toFixed(1)}h)`,
-        lastUpdate: new Date(cached.timestamp).toISOString(),
+        state: 'online',
         details: {
-          source: 'cache',
+          source: `Cache local (${ageHours.toFixed(1)}h)`,
           features: stats.totalFeatures,
         }
       })
@@ -87,8 +85,10 @@ export async function loadNetworkData(forceRefresh = false): Promise<LoadResult>
   // Pas de cache valide, charger depuis l'API
   console.log('🌐 Téléchargement depuis geo.admin.ch...')
   updateSystemStatus('network-layer', {
-    status: 'loading',
-    message: 'Téléchargement en cours...',
+    state: 'loading',
+    details: {
+      source: 'Téléchargement en cours...',
+    }
   })
   
   try {
@@ -103,11 +103,9 @@ export async function loadNetworkData(forceRefresh = false): Promise<LoadResult>
     console.log('✅ Cache mis à jour')
     
     updateSystemStatus('network-layer', {
-      status: 'online',
-      message: `API geo.admin.ch`,
-      lastUpdate: new Date().toISOString(),
+      state: 'online',
       details: {
-        source: 'api',
+        source: 'geo.admin.ch',
         features: stats.totalFeatures,
       }
     })
@@ -127,11 +125,10 @@ export async function loadNetworkData(forceRefresh = false): Promise<LoadResult>
       const stats = computeStats(cached.data)
       
       updateSystemStatus('network-layer', {
-        status: 'degraded',
-        message: 'Cache périmé (API indisponible)',
-        lastUpdate: new Date(cached.timestamp).toISOString(),
+        state: 'degraded',
+        lastError: 'API indisponible, utilisation du cache périmé',
         details: {
-          source: 'stale-cache',
+          source: 'Cache périmé',
           features: stats.totalFeatures,
         }
       })
@@ -149,8 +146,8 @@ export async function loadNetworkData(forceRefresh = false): Promise<LoadResult>
     
     // Pas de cache, erreur
     updateSystemStatus('network-layer', {
-      status: 'offline',
-      message: 'Erreur chargement',
+      state: 'offline',
+      lastError: 'Erreur de chargement, aucune donnée disponible',
     })
     
     throw error

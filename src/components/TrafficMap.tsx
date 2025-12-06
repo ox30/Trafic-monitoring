@@ -261,9 +261,12 @@ export function TrafficMap({
         
         // Signaler le mode dégradé
         updateSystemStatus('network-layer', {
-          status: 'degraded',
-          message: 'Données mock (fallback)',
-          details: { error: String(error) }
+          state: 'degraded',
+          lastError: 'Utilisation des données mock',
+          details: { 
+            source: 'Données locales (fallback)',
+            error: String(error),
+          }
         })
       } finally {
         setIsLoading(false)
