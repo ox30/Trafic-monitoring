@@ -14,6 +14,7 @@ import {
   getStateColor,
   getStateIcon,
 } from '../services/systemStatus'
+import { clearCache, getCacheInfo } from '../services/networkCache'
 import './SystemStatusPanel.css'
 
 export function SystemStatusPanel() {
@@ -109,6 +110,37 @@ interface SystemStatusItemProps {
 function SystemStatusItem({ system }: SystemStatusItemProps) {
   const stateColor = getStateColor(system.state)
   const stateIcon = getStateIcon(system.state)
+  const [isRefreshing, setIsRefreshing] = useState(false)
+  const [cacheAge, setCacheAge] = useState<string | null>(null)
+
+  // Charger l'âge du cache pour network-layer
+  useEffect(() => {
+    if (system.id === 'network-layer') {
+      getCacheInfo().then(info => {
+        if (info?.exists && info.ageHours !== null) {
+          setCacheAge(`${info.ageHours.toFixed(1)}h`)
+        } else {
+          setCacheAge(null)
+        }
+      })
+    }
+  }, [system.id, system.state])
+
+  // Fonction de rafraîchissement
+  const handleRefresh = async () => {
+    if (isRefreshing) return
+    
+    setIsRefreshing(true)
+    try {
+      // Vider le cache
+      await clearCache()
+      // Recharger la page pour forcer le rechargement des données
+      window.location.reload()
+    } catch (error) {
+      console.error('Erreur rafraîchissement:', error)
+      setIsRefreshing(false)
+    }
+  }
 
   return (
     <div className={`system-item state-${system.state}`}>
@@ -140,6 +172,36 @@ function SystemStatusItem({ system }: SystemStatusItemProps) {
               <span className="detail-value">{formatDetailValue(value)}</span>
             </span>
           ))}
+        </div>
+      )}
+
+      {/* Infos cache + bouton rafraîchissement pour network-layer */}
+      {system.id === 'network-layer' && (
+        <div className="system-actions">
+          {cacheAge && (
+            <span className="cache-age">
+              <span className="cache-icon">💾</span>
+              Cache : {cacheAge}
+            </span>
+          )}
+          <button 
+            className={`refresh-button ${isRefreshing ? 'refreshing' : ''}`}
+            onClick={handleRefresh}
+            disabled={isRefreshing}
+            title="Vider le cache et recharger depuis l'API"
+          >
+            <svg 
+              className="refresh-icon" 
+              viewBox="0 0 24 24" 
+              fill="none" 
+              stroke="currentColor" 
+              strokeWidth="2"
+            >
+              <path d="M23 4v6h-6M1 20v-6h6"/>
+              <path d="M3.51 9a9 9 0 0114.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0020.49 15"/>
+            </svg>
+            {isRefreshing ? 'Rechargement...' : 'Rafraîchir'}
+          </button>
         </div>
       )}
 

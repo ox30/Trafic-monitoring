@@ -18,85 +18,74 @@
  * - Points kilométriques : type_geom = "point"
  *   - name = "1410" (nom du point de repère)
  *   - kilometerwert = "141" (valeur en km)
+ * 
+ * STRATÉGIE DE CHARGEMENT :
+ * L'API identify a une limite de ~500-1000 features par requête.
+ * On charge donc route par route (N1, N2, etc.) pour tout récupérer.
  */
 
 const GEO_ADMIN_API_BASE = 'https://api3.geo.admin.ch/rest/services/api/MapServer'
 const LAYER_ID = 'ch.astra.nationalstrassenachsen'
 
-// Subdiviser la Suisse en zones plus petites pour récupérer toutes les données
-// L'API a une limite de résultats par requête
-const SWITZERLAND_ZONES = [
-  // Suisse romande - Ouest
-  { minLon: 5.9, minLat: 45.8, maxLon: 6.8, maxLat: 46.6 },
-  { minLon: 5.9, minLat: 46.5, maxLon: 6.8, maxLat: 47.2 },
-  // Suisse romande - Centre
-  { minLon: 6.7, minLat: 45.8, maxLon: 7.5, maxLat: 46.6 },
-  { minLon: 6.7, minLat: 46.5, maxLon: 7.5, maxLat: 47.2 },
-  // Suisse centrale - Berne
-  { minLon: 7.4, minLat: 46.0, maxLon: 8.0, maxLat: 46.7 },
-  { minLon: 7.4, minLat: 46.6, maxLon: 8.0, maxLat: 47.3 },
-  // Suisse centrale - Lucerne
-  { minLon: 7.9, minLat: 46.5, maxLon: 8.5, maxLat: 47.2 },
-  { minLon: 7.9, minLat: 47.1, maxLon: 8.5, maxLat: 47.6 },
-  // Zurich et environs
-  { minLon: 8.4, minLat: 47.0, maxLon: 9.0, maxLat: 47.6 },
-  // Suisse orientale - St-Gall
-  { minLon: 8.9, minLat: 47.0, maxLon: 9.7, maxLat: 47.7 },
-  // Grisons Nord
-  { minLon: 9.0, minLat: 46.5, maxLon: 10.0, maxLat: 47.1 },
-  // Grisons Sud / Tessin Nord
-  { minLon: 8.5, minLat: 46.0, maxLon: 9.5, maxLat: 46.6 },
-  // Tessin Sud
-  { minLon: 8.5, minLat: 45.8, maxLon: 9.5, maxLat: 46.1 },
-  // Valais
-  { minLon: 6.8, minLat: 45.9, maxLon: 8.0, maxLat: 46.4 },
-  // Grisons Est
-  { minLon: 9.5, minLat: 46.3, maxLon: 10.5, maxLat: 47.0 },
+// Liste des routes nationales suisses
+const ROUTE_NUMBERS = [
+  'N1', 'N2', 'N3', 'N4', 'N5', 'N6', 'N7', 'N8', 'N9',
+  'N10', 'N11', 'N12', 'N13', 'N14', 'N15', 'N16', 'N17', 'N18',
+  'N20', 'N21', 'N22', 'N23', 'N24', 'N25', 'N28',
 ]
+
+// Bounding box de la Suisse en WGS84
+const SWITZERLAND_BOUNDS = {
+  minLon: 5.9,
+  minLat: 45.8,
+  maxLon: 10.5,
+  maxLat: 47.9,
+}
 
 export interface NationalRoadFeature {
   id: number
-  strassennummer: string | null  // N1, N1_YVER, N20, etc.
-  segmentname: string | null     // ECUBLENS - WANKDORF, S4, etc.
-  bezeichnung: string | null     // Genève - St. Margrethen, 29 Murten, etc.
-  name: string | null            // Nom du point de repère (pour les points km)
-  kilometerwert: string | null   // Valeur kilométrique
-  sektorlaenge: string | null    // Longueur du secteur en mètres
-  positionscode: string | null   // "+", "-", "=" (sens de circulation)
-  eigentuemer: string | null     // Propriétaire (CH)
+  strassennummer: string | null
+  segmentname: string | null
+  bezeichnung: string | null
+  name: string | null
+  kilometerwert: string | null
+  sektorlaenge: string | null
+  positionscode: string | null
+  eigentuemer: string | null
   type_geom: 'line' | 'point'
 }
 
 /**
  * Charge les axes des routes nationales depuis l'API geo.admin.ch
- * Fait plusieurs requêtes par zone pour contourner la limite de l'API
+ * Stratégie : charger route par route pour contourner la limite de l'API
  */
 export async function loadNationalRoads(): Promise<GeoJSON.FeatureCollection> {
   const allFeatures: GeoJSON.Feature[] = []
   const seenIds = new Set<number>()
   
   console.log('🔄 Chargement des routes nationales depuis geo.admin.ch...')
-  console.log(`   ${SWITZERLAND_ZONES.length} zones à charger`)
+  console.log(`   ${ROUTE_NUMBERS.length} routes à charger`)
   
-  // Charger chaque zone en parallèle (par groupes de 5 pour éviter de surcharger)
+  // Charger chaque route en parallèle (par groupes de 5)
   const chunkSize = 5
-  for (let i = 0; i < SWITZERLAND_ZONES.length; i += chunkSize) {
-    const chunk = SWITZERLAND_ZONES.slice(i, i + chunkSize)
-    const chunkPromises = chunk.map(async (zone, idx) => {
+  for (let i = 0; i < ROUTE_NUMBERS.length; i += chunkSize) {
+    const chunk = ROUTE_NUMBERS.slice(i, i + chunkSize)
+    
+    const chunkPromises = chunk.map(async (routeNum) => {
       try {
-        const features = await loadZone(zone)
-        console.log(`   Zone ${i + idx + 1}/${SWITZERLAND_ZONES.length}: ${features.length} features`)
-        return features
+        const features = await loadRouteData(routeNum)
+        console.log(`   ${routeNum}: ${features.length} features`)
+        return { routeNum, features }
       } catch (error) {
-        console.warn(`   Zone ${i + idx + 1}: Erreur`, error)
-        return []
+        console.warn(`   ${routeNum}: Erreur`, error)
+        return { routeNum, features: [] }
       }
     })
     
-    const chunkResults = await Promise.all(chunkPromises)
+    const results = await Promise.all(chunkPromises)
     
-    // Fusionner les résultats en évitant les doublons
-    for (const features of chunkResults) {
+    // Fusionner les résultats
+    for (const { features } of results) {
       for (const feature of features) {
         const featureId = feature.properties?.id || feature.id
         if (featureId && !seenIds.has(featureId as number)) {
@@ -125,20 +114,20 @@ export async function loadNationalRoads(): Promise<GeoJSON.FeatureCollection> {
 }
 
 /**
- * Charge les features d'une zone spécifique
+ * Charge les données d'une route spécifique via l'API find
+ * Utilise une recherche par le champ strassennummer
  */
-async function loadZone(bbox: { minLon: number; minLat: number; maxLon: number; maxLat: number }): Promise<GeoJSON.Feature[]> {
-  const { minLon, minLat, maxLon, maxLat } = bbox
-  
-  const url = new URL(`${GEO_ADMIN_API_BASE}/identify`)
-  url.searchParams.set('layers', `all:${LAYER_ID}`)
-  url.searchParams.set('geometryType', 'esriGeometryEnvelope')
-  url.searchParams.set('geometry', `${minLon},${minLat},${maxLon},${maxLat}`)
+async function loadRouteData(routeNumber: string): Promise<GeoJSON.Feature[]> {
+  // Utiliser l'endpoint find pour rechercher par attribut
+  // searchText avec le préfixe de la route (ex: "N1" match "N1", "N1_BERN", etc.)
+  const url = new URL(`${GEO_ADMIN_API_BASE}/find`)
+  url.searchParams.set('layer', LAYER_ID)
+  url.searchParams.set('searchField', 'strassennummer')
+  url.searchParams.set('searchText', routeNumber)
   url.searchParams.set('geometryFormat', 'geojson')
   url.searchParams.set('sr', '4326')
   url.searchParams.set('returnGeometry', 'true')
-  url.searchParams.set('tolerance', '0')
-  url.searchParams.set('limit', '100000')  // Limite maximale
+  url.searchParams.set('contains', 'true')  // Recherche "contient" pour matcher N1, N1_BERN, etc.
 
   const response = await fetch(url.toString())
   
@@ -153,7 +142,58 @@ async function loadZone(bbox: { minLon: number; minLat: number; maxLon: number; 
       id: number
       featureId: number
       geometry: GeoJSON.Geometry
-      geometryType: string
+      properties: Record<string, unknown>
+      attrs: Record<string, unknown>
+    }) => {
+      // L'API find retourne les attributs dans "attrs" ou "properties"
+      const props = result.attrs || result.properties || {}
+      
+      return {
+        type: 'Feature' as const,
+        id: result.featureId || result.id,
+        geometry: result.geometry,
+        properties: {
+          id: result.featureId || result.id,
+          ...props,
+          isRamp: isRampSegment(props),
+        },
+      }
+    })
+  }
+  
+  return []
+}
+
+/**
+ * Méthode alternative : charger par zone géographique
+ * Utilisée en fallback si find ne fonctionne pas
+ */
+async function loadByZone(bbox: { minLon: number; minLat: number; maxLon: number; maxLat: number }): Promise<GeoJSON.Feature[]> {
+  const { minLon, minLat, maxLon, maxLat } = bbox
+  
+  const url = new URL(`${GEO_ADMIN_API_BASE}/identify`)
+  url.searchParams.set('layers', `all:${LAYER_ID}`)
+  url.searchParams.set('geometryType', 'esriGeometryEnvelope')
+  url.searchParams.set('geometry', `${minLon},${minLat},${maxLon},${maxLat}`)
+  url.searchParams.set('geometryFormat', 'geojson')
+  url.searchParams.set('sr', '4326')
+  url.searchParams.set('returnGeometry', 'true')
+  url.searchParams.set('tolerance', '0')
+  url.searchParams.set('limit', '100000')
+
+  const response = await fetch(url.toString())
+  
+  if (!response.ok) {
+    throw new Error(`Erreur API: ${response.status}`)
+  }
+
+  const data = await response.json()
+  
+  if (data.results && Array.isArray(data.results)) {
+    return data.results.map((result: {
+      id: number
+      featureId: number
+      geometry: GeoJSON.Geometry
       properties: Record<string, unknown>
     }) => ({
       type: 'Feature' as const,
@@ -162,7 +202,6 @@ async function loadZone(bbox: { minLon: number; minLat: number; maxLon: number; 
       properties: {
         id: result.featureId || result.id,
         ...result.properties,
-        // Ajouter un flag pour identifier les rampes
         isRamp: isRampSegment(result.properties),
       },
     }))
@@ -172,24 +211,91 @@ async function loadZone(bbox: { minLon: number; minLat: number; maxLon: number; 
 }
 
 /**
- * Détermine si un segment est une rampe (sortie, entrée, échangeur)
- * 
- * LOGIQUE :
- * - Axe principal : strassennummer = "N1", "N2", "N20" (juste le numéro)
- * - Rampe : strassennummer = "N1_YVER", "N1_MURT" (contient un underscore)
+ * Charge toutes les routes avec fallback sur la méthode par zone
+ */
+export async function loadNationalRoadsWithFallback(): Promise<GeoJSON.FeatureCollection> {
+  try {
+    // Essayer d'abord la méthode route par route
+    const result = await loadNationalRoads()
+    
+    // Si on a assez de données, retourner
+    if (result.features.length > 1000) {
+      return result
+    }
+    
+    console.log('⚠️ Peu de données avec find, essai avec identify par zones...')
+    
+    // Fallback : charger par petites zones
+    return await loadByMultipleZones()
+  } catch (error) {
+    console.error('Erreur chargement routes:', error)
+    throw error
+  }
+}
+
+/**
+ * Charge par multiples petites zones (fallback)
+ */
+async function loadByMultipleZones(): Promise<GeoJSON.FeatureCollection> {
+  const allFeatures: GeoJSON.Feature[] = []
+  const seenIds = new Set<number>()
+  
+  // Créer une grille de petites zones
+  const { minLon, minLat, maxLon, maxLat } = SWITZERLAND_BOUNDS
+  const zones: { minLon: number; minLat: number; maxLon: number; maxLat: number }[] = []
+  const step = 0.5 // Degré
+  
+  for (let lon = minLon; lon < maxLon; lon += step) {
+    for (let lat = minLat; lat < maxLat; lat += step) {
+      zones.push({
+        minLon: lon,
+        minLat: lat,
+        maxLon: Math.min(lon + step, maxLon),
+        maxLat: Math.min(lat + step, maxLat),
+      })
+    }
+  }
+  
+  console.log(`   Chargement par ${zones.length} zones...`)
+  
+  // Charger par groupes
+  const chunkSize = 10
+  for (let i = 0; i < zones.length; i += chunkSize) {
+    const chunk = zones.slice(i, i + chunkSize)
+    const promises = chunk.map(zone => loadByZone(zone).catch(() => []))
+    const results = await Promise.all(promises)
+    
+    for (const features of results) {
+      for (const feature of features) {
+        const id = feature.properties?.id || feature.id
+        if (id && !seenIds.has(id as number)) {
+          seenIds.add(id as number)
+          allFeatures.push(feature)
+        }
+      }
+    }
+    
+    console.log(`   ${Math.min(i + chunkSize, zones.length)}/${zones.length} zones...`)
+  }
+  
+  return {
+    type: 'FeatureCollection',
+    features: allFeatures,
+  }
+}
+
+/**
+ * Détermine si un segment est une rampe
+ * Axe principal : strassennummer = "N1", "N2", "N20" (juste le numéro)
+ * Rampe : strassennummer = "N1_YVER", "N1_MURT" (contient un underscore)
  */
 export function isRampSegment(properties: Record<string, unknown>): boolean {
   const strassennummer = (properties.strassennummer as string) || ''
-  
-  // Si strassennummer contient un underscore après le numéro de route, c'est une rampe
-  // Ex: N1_YVER, N1_MURT, N4_MUTZ sont des rampes
-  // Ex: N1, N2, N20 sont des axes principaux
   return strassennummer.includes('_')
 }
 
 /**
- * Extrait le numéro de route principal (N1, N2, etc.) depuis strassennummer
- * Ex: "N1_BERN" -> "N1", "N16" -> "N16"
+ * Extrait le numéro de route principal
  */
 export function extractRouteNumber(strassennummer: string | null): string | null {
   if (!strassennummer) return null
@@ -198,7 +304,7 @@ export function extractRouteNumber(strassennummer: string | null): string | null
 }
 
 /**
- * Convertit le numéro de route N vers A (N1 -> A1)
+ * Convertit N vers A
  */
 export function convertToAxisCode(routeNumber: string | null): string | null {
   if (!routeNumber) return null
@@ -206,7 +312,7 @@ export function convertToAxisCode(routeNumber: string | null): string | null {
 }
 
 /**
- * Formate le code de position pour l'affichage
+ * Formate le code de position
  */
 export function formatPositionCode(code: string | null): string {
   if (!code) return ''
@@ -222,16 +328,9 @@ export function formatPositionCode(code: string | null): string {
  * Couleurs pour l'affichage
  */
 export const ROAD_COLORS = {
-  // Axes principaux - ROUGE
   mainAxis: '#dc2626',
-  
-  // Rampes, sorties, entrées - VIOLET/MAGENTA
   ramp: '#a855f7',
-  
-  // Sélection - VERT CLAIR
   selected: '#4ade80',
-  
-  // Points kilométriques
   kmPoint: '#f59e0b',
   kmPointStroke: '#ffffff',
 }

@@ -7,7 +7,8 @@ import { useEffect, useRef, useCallback, useState } from 'react'
 import maplibregl from 'maplibre-gl'
 import 'maplibre-gl/dist/maplibre-gl.css'
 import { TrafficEvent } from '../domain/events'
-import { loadNationalRoads, extractRouteNumber, ROAD_COLORS } from '../services/geoAdminApi'
+import { loadNetworkData } from '../services/networkLoader'
+import { extractRouteNumber, ROAD_COLORS } from '../services/geoAdminApi'
 import { updateSystemStatus } from '../services/systemStatus'
 
 // Import des icônes d'événements
@@ -235,45 +236,34 @@ export function TrafficMap({
         console.warn('Erreur chargement icônes:', e)
       }
 
-      // Charger les routes nationales depuis l'API geo.admin.ch
+      // Charger les routes nationales (cache IndexedDB ou API geo.admin.ch)
       let networkData: GeoJSON.FeatureCollection
-      
-      // Signaler le début du chargement
-      updateSystemStatus('network-layer', {
-        state: 'loading',
-        details: { source: 'geo.admin.ch' }
-      })
       
       try {
         setIsLoading(true)
-        networkData = await loadNationalRoads()
         
-        if (networkData.features.length === 0) {
-          throw new Error('Aucune donnée reçue')
+        // Charger via le service (cache ou API)
+        const result = await loadNetworkData()
+        networkData = result.data
+        
+        console.log(`✅ ${result.stats.totalFeatures} features (source: ${result.source})`)
+        console.log(`   - ${result.stats.mainAxes} axes principaux`)
+        console.log(`   - ${result.stats.ramps} rampes`)
+        console.log(`   - ${result.stats.points} points KM`)
+        
+        if (result.cacheInfo) {
+          console.log(`   - Cache: ${result.cacheInfo.ageHours.toFixed(1)}h`)
         }
         
-        console.log(`✅ ${networkData.features.length} features chargées depuis geo.admin.ch`)
-        
-        // Signaler le succès
-        updateSystemStatus('network-layer', {
-          state: 'online',
-          details: { 
-            source: 'geo.admin.ch (API)',
-            featuresCount: networkData.features.length,
-          }
-        })
       } catch (error) {
         console.warn('⚠️ Fallback vers données mock:', error)
         networkData = mockNetworkData
         
         // Signaler le mode dégradé
         updateSystemStatus('network-layer', {
-          state: 'degraded',
-          lastError: error instanceof Error ? error.message : 'Erreur de connexion',
-          details: { 
-            source: 'Données locales (fallback)',
-            featuresCount: networkData.features.length,
-          }
+          status: 'degraded',
+          message: 'Données mock (fallback)',
+          details: { error: String(error) }
         })
       } finally {
         setIsLoading(false)
@@ -505,7 +495,14 @@ export function TrafficMap({
         mapInstance.getCanvas().style.cursor = 'pointer'
         
         const feature = e.features[0]
-        const coordinates = (feature.geometry as GeoJSON.Point).coordinates.slice() as [number, number]
+        const geom = feature.geometry
+        
+        // Valider que c'est bien un Point avec des coordonnées valides
+        if (geom.type !== 'Point' || !Array.isArray(geom.coordinates) || geom.coordinates.length < 2) {
+          return
+        }
+        
+        const coordinates: [number, number] = [geom.coordinates[0], geom.coordinates[1]]
         const props = feature.properties || {}
         
         const pointName = props.name || ''
@@ -560,7 +557,14 @@ export function TrafficMap({
         mapInstance.getCanvas().style.cursor = 'pointer'
         
         const feature = e.features[0]
-        const coordinates = (feature.geometry as GeoJSON.Point).coordinates.slice() as [number, number]
+        const geom = feature.geometry
+        
+        // Valider que c'est bien un Point avec des coordonnées valides
+        if (geom.type !== 'Point' || !Array.isArray(geom.coordinates) || geom.coordinates.length < 2) {
+          return
+        }
+        
+        const coordinates: [number, number] = [geom.coordinates[0], geom.coordinates[1]]
         const props = feature.properties || {}
 
         popup
