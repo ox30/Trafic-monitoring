@@ -8,7 +8,7 @@ import maplibregl from 'maplibre-gl'
 import 'maplibre-gl/dist/maplibre-gl.css'
 import { TrafficEvent } from '../domain/events'
 import { GlobalSegment } from '../domain/network'
-import { loadNationalRoads, extractRouteNumber, ROUTE_COLORS } from '../services/geoAdminApi'
+import { loadNationalRoads, extractRouteNumber, ROAD_COLORS } from '../services/geoAdminApi'
 import { updateSystemStatus } from '../services/systemStatus'
 
 // Import des icônes d'événements
@@ -289,42 +289,53 @@ export function TrafficMap({
         data: networkData,
       })
 
-      // Couche des routes nationales - fond (toutes les lignes)
+      // Couche des routes nationales - Axes principaux (ROUGE)
       mapInstance.addLayer({
-        id: 'roads-background',
+        id: 'roads-main',
         type: 'line',
         source: 'national-roads',
-        filter: ['any',
-          ['==', ['geometry-type'], 'LineString'],
-          ['==', ['geometry-type'], 'MultiLineString']
+        filter: ['all',
+          ['any',
+            ['==', ['geometry-type'], 'LineString'],
+            ['==', ['geometry-type'], 'MultiLineString']
+          ],
+          ['!=', ['get', 'isRamp'], true]
         ],
         paint: {
-          'line-color': [
-            'case',
-            ['==', ['slice', ['coalesce', ['get', 'strassennummer'], ''], 0, 2], 'N1'], ROUTE_COLORS['N1'],
-            ['==', ['slice', ['coalesce', ['get', 'strassennummer'], ''], 0, 2], 'N2'], ROUTE_COLORS['N2'],
-            ['==', ['slice', ['coalesce', ['get', 'strassennummer'], ''], 0, 2], 'N3'], ROUTE_COLORS['N3'],
-            ['==', ['slice', ['coalesce', ['get', 'strassennummer'], ''], 0, 2], 'N4'], ROUTE_COLORS['N4'],
-            ['==', ['slice', ['coalesce', ['get', 'strassennummer'], ''], 0, 2], 'N5'], ROUTE_COLORS['N5'],
-            ['==', ['slice', ['coalesce', ['get', 'strassennummer'], ''], 0, 2], 'N6'], ROUTE_COLORS['N6'],
-            ['==', ['slice', ['coalesce', ['get', 'strassennummer'], ''], 0, 2], 'N7'], ROUTE_COLORS['N7'],
-            ['==', ['slice', ['coalesce', ['get', 'strassennummer'], ''], 0, 2], 'N8'], ROUTE_COLORS['N8'],
-            ['==', ['slice', ['coalesce', ['get', 'strassennummer'], ''], 0, 2], 'N9'], ROUTE_COLORS['N9'],
-            ['==', ['slice', ['coalesce', ['get', 'strassennummer'], ''], 0, 3], 'N12'], ROUTE_COLORS['N12'],
-            ['==', ['slice', ['coalesce', ['get', 'strassennummer'], ''], 0, 3], 'N13'], ROUTE_COLORS['N13'],
-            ['==', ['slice', ['coalesce', ['get', 'strassennummer'], ''], 0, 3], 'N14'], ROUTE_COLORS['N14'],
-            ['==', ['slice', ['coalesce', ['get', 'strassennummer'], ''], 0, 3], 'N15'], ROUTE_COLORS['N15'],
-            ['==', ['slice', ['coalesce', ['get', 'strassennummer'], ''], 0, 3], 'N16'], ROUTE_COLORS['N16'],
-            // Fallback pour données mock
-            ['==', ['get', 'axe'], 'A1'], ROUTE_COLORS['N1'],
-            ['==', ['get', 'axe'], 'A9'], ROUTE_COLORS['N9'],
-            ROUTE_COLORS.default
-          ],
+          'line-color': ROAD_COLORS.mainAxis,
           'line-width': [
             'interpolate', ['linear'], ['zoom'],
             6, 2,
             10, 4,
             14, 6
+          ],
+          'line-opacity': 0.9,
+        },
+        layout: {
+          'line-cap': 'round',
+          'line-join': 'round',
+        },
+      })
+
+      // Couche des rampes, sorties, entrées (VIOLET)
+      mapInstance.addLayer({
+        id: 'roads-ramps',
+        type: 'line',
+        source: 'national-roads',
+        filter: ['all',
+          ['any',
+            ['==', ['geometry-type'], 'LineString'],
+            ['==', ['geometry-type'], 'MultiLineString']
+          ],
+          ['==', ['get', 'isRamp'], true]
+        ],
+        paint: {
+          'line-color': ROAD_COLORS.ramp,
+          'line-width': [
+            'interpolate', ['linear'], ['zoom'],
+            6, 1.5,
+            10, 3,
+            14, 5
           ],
           'line-opacity': 0.85,
         },
@@ -406,8 +417,14 @@ export function TrafficMap({
       updateHighlight(selectedSegmentRef.current)
       updateEvents(eventsRef.current)
 
-      // Interactions
-      mapInstance.on('click', 'roads-background', (e: maplibregl.MapMouseEvent & { features?: maplibregl.MapGeoJSONFeature[] }) => {
+      // Popup au survol des routes
+      const popup = new maplibregl.Popup({
+        closeButton: false,
+        closeOnClick: false,
+      })
+
+      // Handler pour le clic sur les routes (axes et rampes)
+      const handleRoadClick = (e: maplibregl.MapMouseEvent & { features?: maplibregl.MapGeoJSONFeature[] }) => {
         if (e.features && e.features.length > 0) {
           const feature = e.features[0]
           const segmentId = feature.properties?.id || feature.properties?.featureId || feature.properties?.segmentname
@@ -415,15 +432,10 @@ export function TrafficMap({
             onSelectSegmentRef.current(String(segmentId))
           }
         }
-      })
+      }
 
-      // Popup au survol des routes
-      const popup = new maplibregl.Popup({
-        closeButton: false,
-        closeOnClick: false,
-      })
-
-      mapInstance.on('mouseenter', 'roads-background', (e: maplibregl.MapMouseEvent & { features?: maplibregl.MapGeoJSONFeature[] }) => {
+      // Handler pour le survol des routes
+      const handleRoadMouseEnter = (e: maplibregl.MapMouseEvent & { features?: maplibregl.MapGeoJSONFeature[] }) => {
         if (!e.features || e.features.length === 0) return
         
         mapInstance.getCanvas().style.cursor = 'pointer'
@@ -433,25 +445,35 @@ export function TrafficMap({
         
         const routeNum = extractRouteNumber(props.strassennummer) || props.axe || 'N/A'
         const axisCode = routeNum.replace('N', 'A')
-        const name = props.bezeichnung || props.segmentname || props.from && props.to ? `${props.from} → ${props.to}` : ''
+        const name = props.bezeichnung || props.segmentname || (props.from && props.to ? `${props.from} → ${props.to}` : '')
         const km = props.kilometerwert ? `KM ${props.kilometerwert}` : ''
+        const isRamp = props.isRamp
         
         popup
           .setLngLat(e.lngLat)
           .setHTML(`
-            <div class="map-popup">
+            <div class="map-popup ${isRamp ? 'map-popup-ramp' : ''}">
               <strong>${axisCode}</strong>
+              ${isRamp ? '<span class="popup-type-ramp">Rampe</span>' : ''}
               ${name ? `<span class="popup-name">${name}</span>` : ''}
               ${km ? `<span class="popup-km">${km}</span>` : ''}
             </div>
           `)
           .addTo(mapInstance)
-      })
+      }
 
-      mapInstance.on('mouseleave', 'roads-background', () => {
+      const handleRoadMouseLeave = () => {
         mapInstance.getCanvas().style.cursor = ''
         popup.remove()
-      })
+      }
+
+      // Appliquer les handlers aux deux couches (axes principaux et rampes)
+      mapInstance.on('click', 'roads-main', handleRoadClick)
+      mapInstance.on('click', 'roads-ramps', handleRoadClick)
+      mapInstance.on('mouseenter', 'roads-main', handleRoadMouseEnter)
+      mapInstance.on('mouseenter', 'roads-ramps', handleRoadMouseEnter)
+      mapInstance.on('mouseleave', 'roads-main', handleRoadMouseLeave)
+      mapInstance.on('mouseleave', 'roads-ramps', handleRoadMouseLeave)
 
       mapInstance.on('mouseenter', 'road-points', (e: maplibregl.MapMouseEvent & { features?: maplibregl.MapGeoJSONFeature[] }) => {
         if (!e.features || e.features.length === 0) return
@@ -542,20 +564,12 @@ export function TrafficMap({
         <div className="legend-title">Routes nationales</div>
         <div className="legend-items">
           <div className="legend-item">
-            <span className="legend-line" style={{ background: ROUTE_COLORS['N1'] }}></span>
-            <span>A1</span>
+            <span className="legend-line" style={{ background: ROAD_COLORS.mainAxis }}></span>
+            <span>Axes principaux</span>
           </div>
           <div className="legend-item">
-            <span className="legend-line" style={{ background: ROUTE_COLORS['N2'] }}></span>
-            <span>A2</span>
-          </div>
-          <div className="legend-item">
-            <span className="legend-line" style={{ background: ROUTE_COLORS['N9'] }}></span>
-            <span>A9</span>
-          </div>
-          <div className="legend-item">
-            <span className="legend-line" style={{ background: ROUTE_COLORS['N12'] }}></span>
-            <span>A12</span>
+            <span className="legend-line" style={{ background: ROAD_COLORS.ramp }}></span>
+            <span>Rampes / Sorties</span>
           </div>
           <div className="legend-item">
             <span className="legend-line legend-line-selected"></span>
