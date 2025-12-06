@@ -43,6 +43,9 @@ export function DashboardPage() {
       const relatedEvent = mockTrafficEvents.find(e => e.globalSegmentId === segmentId)
       if (relatedEvent) {
         setSelectedEventId(relatedEvent.id)
+      } else {
+        // Aucun événement associé → désélectionner l'événement précédent
+        setSelectedEventId(null)
       }
     } else {
       // Désélection du segment → désélectionner aussi l'événement

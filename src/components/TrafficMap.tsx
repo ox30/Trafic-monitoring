@@ -412,14 +412,6 @@ export function TrafficMap({
         }
       })
 
-      mapInstance.on('mouseenter', 'roads-background', () => {
-        mapInstance.getCanvas().style.cursor = 'pointer'
-      })
-
-      mapInstance.on('mouseleave', 'roads-background', () => {
-        mapInstance.getCanvas().style.cursor = ''
-      })
-
       // Popup au survol des routes
       const popup = new maplibregl.Popup({
         closeButton: false,
@@ -428,6 +420,8 @@ export function TrafficMap({
 
       mapInstance.on('mouseenter', 'roads-background', (e: maplibregl.MapMouseEvent & { features?: maplibregl.MapGeoJSONFeature[] }) => {
         if (!e.features || e.features.length === 0) return
+        
+        mapInstance.getCanvas().style.cursor = 'pointer'
         
         const feature = e.features[0]
         const props = feature.properties || {}
@@ -450,6 +444,7 @@ export function TrafficMap({
       })
 
       mapInstance.on('mouseleave', 'roads-background', () => {
+        mapInstance.getCanvas().style.cursor = ''
         popup.remove()
       })
 
